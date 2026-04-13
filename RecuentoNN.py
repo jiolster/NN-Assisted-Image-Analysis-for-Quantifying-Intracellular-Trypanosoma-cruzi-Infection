@@ -11,6 +11,8 @@ import errno # for checking whether the montage direcotry already exists
 from cellpose import models, io #Cellpose ML model for single cell segmentation
 from cellpose.io import imread 
 from cellpose.plot import mask_overlay
+import torch #Clear vram after script is ran
+import gc
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -116,7 +118,7 @@ def find_infected(amastigote_props, Nuclei_props, params, conditions):
     return amastigotes_in_cell, sc_results_partial, fov_row, pairs, percent_infected, amastigotes_per_infected
 
 ##
-def summary_plot(name, image, masks_Tc, masks_Nuc, pairs, percent_infected, amastigotes_per_infected):
+def summary_plot(name, image, masks_Tc, masks_Nuc, pairs, percent_infected, amastigotes_per_infected, amastigotes_in_cell):
     '''
     Generates a figure (2x2) with the original image, the image overlayed with the amastigote or nuclear masks 
     and lines connceting the amastigotes to their assigned nucleus.
@@ -172,7 +174,7 @@ def summary_plot(name, image, masks_Tc, masks_Nuc, pairs, percent_infected, amas
 
 #####
 # Wroking direcotry (where program is saved)
-wd = r'C:\Users\Usuario\Desktop\Joaquin\Test\20250624 - Muestras Dualseq Mayo y Junio'
+wd = r'C:\Users\Usuario\Desktop\Joaquin\Test\20260121 - AC16 Dualseq Extraccion 2'
 os.chdir(wd)
 
 # Montage direcotry
@@ -182,7 +184,7 @@ make_sure_path_exists(figuredir)
 
 
 # Folder where all the images are stored, each within a direcotry for all the images in a field
-main_folder = r'C:\Users\Usuario\Desktop\Joaquin\Test\20250624 - Muestras Dualseq Mayo y Junio\Fotos'
+main_folder = r'C:\Users\Usuario\Desktop\Joaquin\Test\20260121 - AC16 Dualseq Extraccion 2\Fotos'
 
 # List of each folder containing the images for the fields of view
 fields = [f for f in os.listdir(main_folder) if os.path.isdir(os.path.join(main_folder, f))]
@@ -208,25 +210,34 @@ flow_threshold = 0.4
 cellprob_threshold = 0.0
 tile_norm_blocksize = 0
 
-#Trained models
-model_Tc = models.CellposeModel(gpu=True, pretrained_model="DAPI_Tc") #Model to detect amastigotes from DNA stain
-model_Nuc= models.CellposeModel(gpu=True, pretrained_model="DAPI_Nuc")  #Model to detect mammalian Nuclei from DNA stain
+##Segmentations
 
-
-#Running the models
+#Amastigotes
+model_Tc = models.CellposeModel(gpu=True, pretrained_model="DAPI_Tc") # Load the model trained to detect amastigotes from DNA stain
 masks_Tc, flows_Tc, styles_Tc = model_Tc.eval(imgs)
+#Clear vram
+del model_Tc
+gc.collect()
+torch.cuda.empty_cache()
+
+#Nuceli
+model_Nuc= models.CellposeModel(gpu=True, pretrained_model="DAPI_Nuc")  #Load the model to detect mammalian Nuclei from DNA stain
 masks_Nuc, flows_Nuc, styles_Nuc = model_Nuc.eval(imgs)
+#Clear memory
+del model_Nuc
+gc.collect()
+torch.cuda.empty_cache()
 
-sep = "-" #Character used to separate the variables 
 
-num_variables = 3 # Numeber of variables used to identify the images
-sep = "-" #Character used to separate the variables 
+#Mask analysis
+num_variables = 4 # Numeber of variables used to identify the images
+sep = "_" #Character used to separate the variables 
 
 #Columns for the output table of Average FOV measurments
 #List of lists, each row corresponds to the measurments for a field of view
-sc_head = ["Cepa","Replica","Campo", "Célula", "Amastigotes"]
+sc_head = ["Cepa","Linea","Replica","Campo", "Célula", "Amastigotes"]
 
-fov_head = ["Cepa", "Replica", "Campo", "Amastigotes", "Células", 
+fov_head = ["Cepa","Linea", "Replica","Campo", "Amastigotes", "Células", 
             "Amas por célula", "Porcentaje", "Amas por célula infectada" ]
 
 # First row is the name of the columns
@@ -251,7 +262,7 @@ for im in range(len(imgs)):
     
     #Plot
     fig_name = "%s.png" % (fields[im])  
-    fig = summary_plot(fields[im], imgs[im], masks_Tc[im], masks_Nuc[im], pairs, percent_infected, amastigotes_per_infected)
+    fig = summary_plot(fields[im], imgs[im], masks_Tc[im], masks_Nuc[im], pairs, percent_infected, amastigotes_per_infected, amastigotes_in_cell)
     plt.savefig(os.path.join(figuredir, fig_name), bbox_inches='tight', dpi = 300) #Saves the plot
     plt.close() #Closes the plot
 
