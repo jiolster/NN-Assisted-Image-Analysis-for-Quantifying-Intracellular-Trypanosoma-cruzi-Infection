@@ -174,7 +174,7 @@ def summary_plot(name, image, masks_Tc, masks_Nuc, pairs, percent_infected, amas
 
 #####
 # Wroking direcotry (where program is saved)
-wd = r'C:\Users\Usuario\Desktop\Joaquin\Test\20260121 - AC16 Dualseq Extraccion 2'
+wd = '/home/joaquin/Desktop/NN-Assisted-Image-Analysis-for-Quantifying-Intracellular-Trypanosoma-cruzi-Infection'
 os.chdir(wd)
 
 # Montage direcotry
@@ -184,7 +184,7 @@ make_sure_path_exists(figuredir)
 
 
 # Folder where all the images are stored, each within a direcotry for all the images in a field
-main_folder = r'C:\Users\Usuario\Desktop\Joaquin\Test\20260121 - AC16 Dualseq Extraccion 2\Fotos'
+main_folder = '/home/joaquin/Desktop/NN-Assisted-Image-Analysis-for-Quantifying-Intracellular-Trypanosoma-cruzi-Infection/Images'
 
 # List of each folder containing the images for the fields of view
 fields = [f for f in os.listdir(main_folder) if os.path.isdir(os.path.join(main_folder, f))]
@@ -230,14 +230,14 @@ torch.cuda.empty_cache()
 
 
 #Mask analysis
-num_variables = 4 # Numeber of variables used to identify the images
+num_variables = 3 # Numeber of variables used to identify the images
 sep = "_" #Character used to separate the variables 
 
 #Columns for the output table of Average FOV measurments
 #List of lists, each row corresponds to the measurments for a field of view
-sc_head = ["Cepa","Linea","Replica","Campo", "Célula", "Amastigotes"]
+sc_head = ["Cepa","Linea","Campo", "Célula", "Amastigotes"]
 
-fov_head = ["Cepa","Linea", "Replica","Campo", "Amastigotes", "Células", 
+fov_head = ["Cepa","Linea", "Campo", "Amastigotes", "Células", 
             "Amas por célula", "Porcentaje", "Amas por célula infectada" ]
 
 # First row is the name of the columns
