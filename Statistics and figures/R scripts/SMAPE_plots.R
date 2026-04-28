@@ -23,6 +23,13 @@ df <- rbind(NN, yo)
 
 str(df)
 
+# Reemplazar AC16 por C2C12
+df$Linea <- as.factor(df$Linea)
+levels(df$Linea)[levels(df$Linea) == "AC16"] <- "C2C12"
+df$Linea <- factor(df$Linea, levels = c( "BeWo", "C2C12", "Caco2",  "HeLa",   "THP1",  "Vero" ))
+levels(df$Linea)
+
+
 #Initial comparison
 plot <- ggplot(df, aes(x = Linea, y = Amastigotes, fill = Cepa)) + geom_boxplot() + 
   facet_grid(cols = vars(Method))
@@ -171,8 +178,17 @@ fovManual$Method <- "Manual"
 fovNN$Method <- "Auto"
 
 #Diferencia entre auto y manual para cada campo
-dif <- fovManual[,c(1,2,3)]
 
+
+#Clean the dataframes
+missing_rows <- anti_join(fovManual, fovNN, by = names(fovNN)[1:3])
+fovManualog <- fovManual
+fovManual <- fovManualog[-25,]
+fovNNog <- fovNN
+fovNN <- fovNNog[,-9]
+
+
+dif <- fovManual[,c(1,2,3)]
 #Symmetric mean absolute percentage error
 dif$Amastigotes <- (fovNN$Amastigotes - fovManual$Amastigotes) / ((fovManual$Amastigotes + fovNN$Amastigotes)/2)
 dif$`Celulas Totales` <- (fovNN$`Celulas Totales` - fovManual$`Celulas Totales`) / ((fovNN$`Celulas Totales` + fovManual$`Celulas Totales`)/2)
@@ -181,6 +197,14 @@ dif$Porcentaje <- (fovNN$Porcentaje - fovManual$Porcentaje) / ((fovManual$Porcen
 dif$Amas.por.célula.infectada <- (fovNN$Amas.por.célula.infectada - fovManual$Amas.por.célula.infectada) / ((fovManual$Amas.por.célula.infectada + fovNN$Amas.por.célula.infectada)/2) 
 
 dif[is.na(dif)] <- 0
+
+# Reemplazar AC16 por C2C12
+dif$Linea <- as.factor(dif$Linea)
+levels(dif$Linea)[levels(dif$Linea) == "AC16"] <- "C2C12"
+dif$Linea <- factor(dif$Linea, levels = c( "BeWo", "C2C12", "Caco2",  "HeLa",   "THP1",  "Vero" ))
+levels(dif$Linea)
+
+str(dif)
 
 #SMAPE plots
 boxamas <- ggplot(dif, aes(x = Linea, y = Amastigotes, fill = Cepa)) + geom_boxplot() + 
@@ -253,7 +277,9 @@ scatterCel
 #SMAPE INSpect
 
 ins <- read.csv("fov_INsPECT.csv")
-ins <- ins[-13,]
+
+missing_rows <- anti_join(ins,fovManual , by = names(fovManual)[1:3])
+ins <- ins[-c(13,16),]
 #Diferencia entre auto y manual para cada campo
 difins <- fovManual[,c(1,2,3)]
 
@@ -265,6 +291,12 @@ difins$Porcentaje <- (ins$Porcentaje - fovManual$Porcentaje) / ((fovManual$Porce
 difins$Amas.por.célula.infectada <- (ins$Amas.por.célula.infectada - fovManual$Amas.por.célula.infectada) / ((fovManual$Amas.por.célula.infectada + ins$Amas.por.célula.infectada)/2) 
 
 difins[is.na(difins)] <- 0
+
+# Reemplazar AC16 por C2C12
+difins$Linea <- as.factor(difins$Linea)
+levels(difins$Linea)[levels(difins$Linea) == "AC16"] <- "C2C12"
+difins$Linea <- factor(difins$Linea, levels = c( "BeWo", "C2C12", "Caco2",  "HeLa",   "THP1",  "Vero" ))
+levels(difins$Linea)
 
 #SMAPE plots ins
 boxamasins <- ggplot(difins, aes(x = Linea, y = Amastigotes, fill = Cepa)) + geom_boxplot() + 

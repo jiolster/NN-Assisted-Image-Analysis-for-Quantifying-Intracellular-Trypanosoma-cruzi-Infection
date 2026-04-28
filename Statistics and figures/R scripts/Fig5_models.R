@@ -32,6 +32,11 @@ auto$Method <- "Auto"
 yo$Method <- "Manual"
 df <- rbind(auto, yo)
 
+# Reemplazar AC16 por C2C12
+df$Linea <- as.factor(df$Linea)
+levels(df$Linea)[levels(df$Linea) == "AC16"] <- "C2C12"
+df$Linea <- factor(df$Linea, levels = c( "BeWo", "C2C12", "Caco2",  "HeLa",   "THP1",  "Vero" ))
+levels(df$Linea)
 
 
 theme_custom <- theme(
@@ -94,6 +99,8 @@ col_prob <- ggplot(df, aes(x = Cepa, y = Infectado, fill = Method)) +
 col_prob
 ggsave("Percent.svg", plot = col_prob, width = 14, height = 8)
 
+#Just infected cells
+df1 <- subset(df, df$Amastigotes > 0)
 histograma <- ggplot(df1, aes(x = Amastigotes, fill = Method)) +
   geom_histogram(binwidth = 1, colour = 'black', position = 'identity', alpha = 0.9, linewidth = 0.2) +
   scale_fill_manual(values = c('#EE7733', '#0077BB')) + theme_minimal() + 
@@ -495,7 +502,7 @@ summary(mb5)
 AIC(mb1, mb2, mb3, mb4, mb5)
 
 #Check fit
-res <- simulateResiduals(mb4)
+res <- simulateResiduals(mb5)
 plot(res)
 
 #Contrasts
@@ -606,7 +613,7 @@ scatter <- ggplot(fov_wide, aes(x = Manual, y = Auto, colour = Cepa)) +
            geom_point(size = 3) + geom_abline(slope = 1)
 scatter
 
-indice <- ggplot(fov, aes(x = Cepa, y = `Índice de infección`, fill = Método)) + 
+indice <- ggplot(fov, aes(x = Cepa, y = index, fill = Método)) + 
   stat_summary(fun = "mean", geom = "col", position = position_dodge2(), colour = 'black', linewidth = 0.2) + 
   stat_summary(fun.data = mean_cl_normal, geom = "errorbar", position = position_dodge2(), linewidth = 0.2) + 
   facet_grid(~Linea) + coord_cartesian(ylim = c(0, NA)) + 
